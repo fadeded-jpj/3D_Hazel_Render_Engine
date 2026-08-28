@@ -35,8 +35,17 @@ vec2 GetSkyVelocity(vec2 uv)
 
 	vec4 worldFar = u_Camera.InverseViewProj * vec4(ndc, 1.0, 1.0);
 
-	vec3 worldDir = normalize(worldFar.xyz / worldFar.w -
-		u_Camera.CameraPositionAndTime.xyz);
+	vec3 directionH =
+		worldFar.xyz -
+		u_Camera.CameraPositionAndTime.xyz * worldFar.w;
+
+	float lengthSquared = dot(directionH, directionH);
+
+	if (lengthSquared < 1e-10)
+		return vec2(0.0);
+
+	vec3 worldDir =
+		directionH * inversesqrt(lengthSquared);
 
 	vec4 currentClip = u_Camera.StabledViewProj * vec4(worldDir, 0.0);
 	vec4 previousClip = u_Camera.PreViewProj * vec4(worldDir, 0.0);
@@ -101,6 +110,13 @@ vec3 ToneMap(vec3 color)
 vec3 UnToneMap(vec3 color)
 {
 	return color / (1 - Luminance(color));
+
+	//float luminance = clamp(
+	//	Luminance(color),
+	//	0.0,
+	//	1.0 - 1e-4);
+
+	//return color / max(1.0 - luminance, 1e-4);
 }
 
 

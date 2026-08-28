@@ -87,7 +87,10 @@ vec3 EvaluateBlinnPhong(
 
 vec3 FresnelSchlick(float cosineTheta, vec3 F0)
 {
-	return F0 + (1.0 - F0) * pow(1.0 - cosineTheta, 5.0);
+	float x = 1.0 - clamp(cosineTheta, 0.0, 1.0);
+	float x2 = x * x;
+	float x5 = x2 * x2 * x;
+	return F0 + (1.0 - F0) * x5;
 }
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
@@ -95,7 +98,8 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
 	float alpha = roughness * roughness;
 	float a2 = alpha * alpha;
 
-	float NdotH = max(dot(N, H), 0.0);
+	// float NdotH = max(dot(N, H), 0.0);
+	float NdotH = clamp(dot(N, H), 0.0, 1.0);
 	float NdotH2 = NdotH * NdotH;
 
 	float denom = NdotH2 * (a2 - 1.0) + 1.0;
@@ -113,8 +117,11 @@ float GeoSchlickGGX(float NdotX, float roughness)
 
 float GeoSchlick(vec3 N, vec3 V, vec3 L, float roughness)
 {
-	float NdotV = max(dot(N, V), 0.0);
-	float NdotL = max(dot(N, L), 0.0);
+	//float NdotV = max(dot(N, V), 0.0);
+	//float NdotL = max(dot(N, L), 0.0);
+	float NdotV = clamp(dot(N, V), 0.0, 1.0);
+	float NdotL = clamp(dot(N, L), 0.0, 1.0);
+
 
 	float G1NV = GeoSchlickGGX(NdotV, roughness);
 	float G1NL = GeoSchlickGGX(NdotL, roughness);
@@ -127,8 +134,6 @@ vec3 EvaluatePBR(
 	vec3 viewDir, float metallic, float roughness
 )
 {
-
-
 	vec3 F0 = mix(vec3(0.04), baseColor, metallic);
 	vec3 halfDir = SafeNormalize(lightDir + viewDir);
 	float VdotH = max(dot(viewDir, halfDir), 0.0);
@@ -140,7 +145,7 @@ vec3 EvaluatePBR(
 	float D = DistributionGGX(normal, halfDir, roughness);
 	vec3 F = FresnelSchlick(VdotH, F0);
 
-	vec3 specular = D * G * F / max(4.0 * NdotL * NdotV, 0.001);
+	vec3 specular = D * G * F / max(4.0 * NdotL * NdotV, 0.0001);
 
 	// diffuse
 	vec3 kd = (vec3(1.0) - F) * (1.0 - metallic);
@@ -200,10 +205,9 @@ vec3 CalculateDirectLighting(
 		//float visibility = texture(u_ShadowMask, v_TexCoord).r;
 		if (i == u_ShadowLightIndex)
 		{
-			float shadowClass =
-				texture(u_ShadowMask, v_TexCoord).r;
-			float characterClass = texture(u_ShadowMask, v_TexCoord).g;
-
+			//float shadowClass =
+			//	texture(u_ShadowMask, v_TexCoord).r;
+			//float characterClass = texture(u_ShadowMask, v_TexCoord).g;
 			float sceneVisibility = CalculateSceneVisibility(
 					worldPos,
 					normal,
@@ -212,27 +216,6 @@ vec3 CalculateDirectLighting(
 					u_Lights[i].PositionRange.xyz);
 			float characterVisibility = CalculateCharacterVisibility(
 					worldPos, normal, lightDir, lightType);
-
-			//if (shadowClass <= 0.05)
-			//	sceneVisibility = 0.0;
-			//else if (shadowClass >= 0.95)
-			//	sceneVisibility = 1.0;
-			//else
-			//	sceneVisibility = CalculateSceneVisibility(
-			//		worldPos,
-			//		normal,
-			//		lightDir,
-			//		lightType,
-			//		u_Lights[i].PositionRange.xyz);
-
-			//if (characterClass <= 0.05)
-			//	characterVisibility = 0.0;
-			//else if (characterClass >= 0.95)
-			//	characterVisibility = 1.0;
-			//else
-			//	characterVisibility = CalculateCharacterVisibility(
-			//		worldPos, normal, lightDir, lightType
-			//	);
 			visibility = min(sceneVisibility, characterVisibility);
 		}
 

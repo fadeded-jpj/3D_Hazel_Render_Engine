@@ -55,9 +55,10 @@ float CalculateDepthBias(float depthBias, vec3 normal, vec3 lightDir)
 {
 	float NdotL = max(dot(normal, lightDir), 0.0);
 
-	return max(
-		depthBias * (1.0 - NdotL),
-		0.00001);
+	float slopeBias = depthBias * (1.0 - NdotL);
+	float minBias = depthBias * 0.01;
+
+	return max(slopeBias, minBias);
 	//return 0.0001 + depthBias * (1.0 - NdotL);
 }
 

@@ -18,6 +18,7 @@ namespace Engine
 		virtual unsigned int GetColorAttachmentCount() const override;
 		virtual glm::ivec2 GetSize() override;
 		virtual void AttachDepth(const Ref<Texture2D>& depth) override;
+		virtual void DetachDepth() override;
 		virtual void AttachDepthCubeFace(const Ref<TextureCubeMap>& texture, unsigned int faceIndex = 0) override;
 		virtual void AttachDepthArray(const Ref<Texture2DArray>& texture, unsigned int layerIndex) override;
 		virtual void AttachColor(const Ref<Texture2D>& texture, unsigned int attachmentIndex = 0, unsigned int mipLevel = 0) override;

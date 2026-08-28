@@ -290,7 +290,7 @@ vec3 IntersectCellBoundary(vec2 minUV, vec2 maxUV, vec3 originTS, vec3 rayDir)
 }
 
 bool traceSSRHiZ(vec3 pos, vec3 direction, vec3 viewNormal,
-	out vec2 hitUV, out float hitDistance)
+	out vec2 hitUV, out float hitDistance, out int finalIt)
 {
 	direction = normalize(direction);
 
@@ -315,7 +315,7 @@ bool traceSSRHiZ(vec3 pos, vec3 direction, vec3 viewNormal,
 
 	// ray = IntersectCellBoundary()
 	int iterations = 0;
-	while (level >= 0 && iterations < 128
+	while (level >= 0 && iterations < 256
 		&& ray.x >= 0 && ray.x < 1
 		&& ray.y >= 0 && ray.y < 1
 		&& ray.z > 0)
@@ -344,7 +344,7 @@ bool traceSSRHiZ(vec3 pos, vec3 direction, vec3 viewNormal,
 		if (CrossedCellBoundary(cell, newCell))
 		{
 			nextRay = IntersectCellBoundary(minUV, maxUV, ray, rayDir);
-			level = min(u_MipCount, level + 2);
+			level = min(u_MipCount - 1, level + 2);
 		}
 		else if (level == 0)
 		{
@@ -366,8 +366,34 @@ bool traceSSRHiZ(vec3 pos, vec3 direction, vec3 viewNormal,
 	}
 
 	hitUV = ray.xy;
-	hitDistance = length(originVS - TS2VS(ray));
+	//vec3 rayVS = TS2VS(ray);
+	//hitDistance = length(originVS - rayVS);
 
+	float fullDepth = GetTexelDepth(hitUV);
+	vec3 hitPositionVS =
+		GetViewSpacePos(hitUV, fullDepth);
+
+	// direction 已经在函数开头 normalize。
+	float rayT = dot(
+		hitPositionVS - originVS,
+		direction);
+
+	if (rayT <= 0.0 || rayT > maxRayDistance)
+		return false;
+
+	vec3 closestPoint =
+		originVS + direction * rayT;
+
+	float perpendicularError =
+		length(hitPositionVS - closestPoint);
+
+	const float hitThicknessVS = 0.015;
+
+	if (perpendicularError > hitThicknessVS)
+		return false;
+
+	hitDistance = rayT;
+	finalIt = iterations;
 	return level < 0 && iterations > 0;
 }
 
@@ -455,12 +481,13 @@ void main()
 	vec2 hitUV;
 	float hitDistance;
 	vec3 color = baseColor;
+	int iterations;
 
 	//o_Color = vec4(color, 1.0f);
 	//return;
 
 	bool hit = u_UseHiZ != 0
-		? traceSSRHiZ(posVS, R, viewNormal, hitUV, hitDistance)
+		? traceSSRHiZ(posVS, R, viewNormal, hitUV, hitDistance, iterations)
 		: traceSSR(posVS, R, viewNormal, hitUV, hitDistance);
 
 	vec4 characterData = texture(u_CharacterNormalMask, hitUV);
@@ -484,12 +511,21 @@ void main()
 	if (hitFacing <= 0.0)
 		hit = false;
 
+	//if (u_UseHiZ != 0)
+	//{
+	//	float it = float(iterations) / 256.0;
+	//	o_Color = vec4(vec3(it), 1.0);
+	//	return;
+	//}
+
 	if (hit)
 	{
-		//o_Color = vec4(1.0f);
+		//o_Color = vec4(hitUV, 0.0, 1.0f);
 		//return;
-
-		vec3 reflectColor = texture(u_ScreenColor, hitUV).rgb;
+		ivec2 size = textureSize(u_ScreenColor, 0);
+		ivec2 hitPixel = ivec2(hitUV * vec2(size));
+		// vec3 reflectColor = texture(u_ScreenColor, hitUV).rgb;
+		vec3 reflectColor = texelFetch(u_ScreenColor, hitPixel, 0).rgb;
 
 		vec3 F0 = mix(vec3(0.04), albedo, metallic);
 		float NdotV = max(dot(viewNormal, viewDir), 0.0);
@@ -502,6 +538,10 @@ void main()
 		float distanceFade = CaculateDistanceFade(hitDistance);
 		float confidence = edgeFade * distanceFade * roughnessFade;
 		// float confidence = 1.0;
+
+		//vec4 characterData = texture(u_CharacterNormalMask, hitUV);
+		//float characterReflectionWeight = characterData.a > 0.5 ? 0.35 : 1.0;
+		//confidence *= characterReflectionWeight;
 
 		// color = mix(baseColor, reflectColor, reflectionWeight * confidence);
 		color = baseColor + reflectColor * F * confidence * ssrStrength;

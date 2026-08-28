@@ -70,6 +70,11 @@ namespace Engine
 			m_DepthAttachment->GetRenderID(),
 			0);
 	}
+	void OpenGLFrameBuffer::DetachDepth()
+	{
+		glNamedFramebufferTexture(m_RenderID, GL_DEPTH_STENCIL_ATTACHMENT, 0, 0);
+		m_DepthAttachment.reset();
+	}
 	void OpenGLFrameBuffer::AttachDepthCubeFace(const Ref<TextureCubeMap>& texture, unsigned int faceIndex)
 	{
 		HZ_CORE_ASSERT(faceIndex < 6, "Cubemap face index must be in [0, 5]");

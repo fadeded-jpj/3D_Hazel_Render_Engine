@@ -710,7 +710,7 @@ namespace Engine
 			RenderPassGPUTimer gpuTimer(RenderProfilePass::Lighting);
 			m_SceneColorBuffer->Bind();
 			m_SceneColorBuffer->ClearColor();
-			m_SceneColorBuffer->AttachDepth(m_GBuffer->GetDepth());
+			m_SceneColorBuffer->DetachDepth();
 
 #ifdef HZ_DEBUG
 			RenderCommand::SetPolygonMode(PolygonMode::Fill);
@@ -727,18 +727,19 @@ namespace Engine
 			m_LightPass.Execute(view, light, m_GBuffer, sceneShadow, characterShadow,
 				m_SSAOPass.GetSSAOTexture(), m_SceneColorBuffer, m_ShadowResources.Character2D);
 		}
+		m_SceneColorBuffer->AttachDepth(m_GBuffer->GetDepth());
+		
 
 		// ------------- outline Pass --------------
 		// backout 要
 		// ScreenSpace outline
-		{
-			RenderDebugScope debugScope("ScreenSpaceOutlinePass");
-			RenderPassCPUTimer cpuTimer(log.Profile.ScreenSpaceOutline);
-			RenderPassGPUTimer gpuTimer(RenderProfilePass::ScreenSpaceOutline);
-			m_ScreenSpaceOutlinePass.Execute(view, m_GBuffer->GetNormalRoughness());
+		//{
+		//	RenderDebugScope debugScope("ScreenSpaceOutlinePass");
+		//	RenderPassCPUTimer cpuTimer(log.Profile.ScreenSpaceOutline);
+		//	RenderPassGPUTimer gpuTimer(RenderProfilePass::ScreenSpaceOutline);
+		//	m_ScreenSpaceOutlinePass.Execute(view, m_GBuffer->GetNormalRoughness());
 
-		}
-
+		//}
 		{
 			RenderDebugScope debugScope("InvertedHullOutlinePass");
 			RenderPassCPUTimer cpuTimer(log.Profile.InvertedHullOutline);
@@ -752,7 +753,6 @@ namespace Engine
 			RenderCommand::SetBlend(BlendMode::Opaque);
 			log += m_InvertedHullOutlinePass.Execute(view, light, sceneShadow);
 		}
-
 
 		// ----------- character pass ----------
 		// 要TAA
@@ -776,12 +776,7 @@ namespace Engine
 			log += m_CharacterPass.Execute(view, light, sceneShadow, characterShadow);
 			m_SceneColorBuffer->SetDrawBuffers({ 0 });
 		}
-		
 
-#ifdef HZ_DEBUG
-		RenderCommand::SetPolygonMode(PolygonMode::Fill);
-#endif // HZ_DEBUG
-		
 		// 角色的内轮廓线
 		{
 			RenderDebugScope debugScope("GeometryOutlinePass");
@@ -796,6 +791,12 @@ namespace Engine
 			RenderCommand::SetBlend(BlendMode::AlphaBlend);
 			log += m_GemotryOutlinePass.Execute(view, light, sceneShadow);
 		}
+		
+
+#ifdef HZ_DEBUG
+		RenderCommand::SetPolygonMode(PolygonMode::Fill);
+#endif // HZ_DEBUG
+		
 
 		// ScreenSpace outline
 		//{
@@ -814,6 +815,10 @@ namespace Engine
 			m_SSRPass.Execute(view, m_GBuffer, m_SceneColorBuffer);
 		}
 		// -------------------------------------------
+
+
+
+
 
 		// ---------- Transparent Pass --------------
 		// 先尝试一下 TAA

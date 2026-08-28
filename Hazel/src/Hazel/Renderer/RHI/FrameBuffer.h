@@ -39,6 +39,7 @@ namespace Engine
 		virtual unsigned int GetColorAttachmentCount() const = 0;
 		virtual glm::ivec2 GetSize() = 0;
 		virtual void AttachDepth(const Ref<Texture2D>& depth) = 0;
+		virtual void DetachDepth() = 0;
 		virtual void AttachDepthCubeFace(const Ref<TextureCubeMap>& texture, unsigned int faceIndex = 0) = 0;
 		virtual void AttachDepthArray(const Ref<Texture2DArray>& texture, unsigned int layerIndex) = 0;
 		virtual void AttachColor(const Ref<Texture2D>& texture, unsigned int attachmentIndex = 0, unsigned int mipLevel = 0) = 0;
