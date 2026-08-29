@@ -214,10 +214,10 @@ void main()
 	}
 	else if (u_DebugView == 4)
 	{
-		mapped = vec3(alpha);
+		mapped = vec3(0.0);
 	}
 
 	o_Color = vec4(mapped, alpha);
-	WriteCharacterNormalMask(N);
+	WriteCharacterNormalMask(normal);
 	o_Velocity = GetVelocity(v_CurrentClip, v_PreviousClip);
 }

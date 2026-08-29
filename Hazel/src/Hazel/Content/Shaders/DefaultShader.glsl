@@ -193,7 +193,7 @@ void main()
 			mapped = vec3(0);
 	}
 	else if (u_DebugView == 4)
-		mapped = vec3(alpha);
+		mapped = vec3(0.0);
 
 
 

@@ -69,6 +69,12 @@ namespace Engine
 	{
 		m_DrawItems.clear();
 		ResetItemStatistics();
+
+#ifdef HZ_DEBUG
+		if (view.DebugSetting.View == RenderDebugView::CSM)
+			return;
+#endif
+
 		m_DrawItems.reserve(objects.size());
 
 		for (const auto& obj : objects)
@@ -227,6 +233,12 @@ namespace Engine
 
 		for (const auto& obj : objects)
 		{
+		#ifdef HZ_DEBUG
+			if (view.DebugSetting.View == RenderDebugView::CSM &&
+				obj.Domain == RenderDomain::Character)
+				continue;
+		#endif
+
 			if (!obj.Visible || !IsTransparent(obj.Material->GetRenderConfig().Blend))
 				continue;
 

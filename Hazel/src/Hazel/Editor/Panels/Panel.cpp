@@ -126,7 +126,7 @@ namespace Engine
 	const char* RenderStatsPanel::RenderStatsName[] =
 	{
 		"Lit", "BaseColor", "WorldNormal",
-		"Emissive", "Alpha", "CSM"
+		"Emissive", "SSR Strength", "CSM"
 	};
 
 	const char* RenderSettingPanel::LightingModesName[] =

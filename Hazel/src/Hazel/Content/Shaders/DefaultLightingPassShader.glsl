@@ -69,7 +69,7 @@ void main()
 	if (u_DebugView == 1)
 		color = baseColor;
 	else if (u_DebugView == 2)
-		color = normal;
+		color = normal * 0.5 + 0.5;
 	else if (u_DebugView == 3)
 		color = emissiveMetallic.rgb;
 	else if (u_DebugView == 4)

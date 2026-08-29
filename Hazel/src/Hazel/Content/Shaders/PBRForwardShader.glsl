@@ -291,7 +291,7 @@ void main()
 	else if (u_DebugView == 3)
 		color = emissive;
 	else if (u_DebugView == 4)
-		color = vec3(surface.a);
+		color = vec3(0.0);
 
 	o_Color = vec4(color, surface.a);
 }

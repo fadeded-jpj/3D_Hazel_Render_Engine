@@ -539,6 +539,8 @@ namespace Engine
 		RenderGPUProfiler::BeginFrame(log.Profile);
 		ShadowFrameData sceneShadow;
 		ShadowFrameData characterShadow;
+		const bool isLitView = view.DebugSetting.View == RenderDebugView::Lit;
+		const bool useTAA = view.TAAEnabled && isLitView;
 
 		const uint32_t currentIndex = m_TAASourceIndex;
 		const uint32_t previousIndex = currentIndex ^ 1u;
@@ -548,7 +550,7 @@ namespace Engine
 			: view.ViewProjection;
 
 		// ------------- TAA Camera jitter -----------------------
-		if (view.TAAEnabled)
+		if (useTAA)
 		{
 			PrepareCameraJitter(view);
 			view.PreviousJitteredViewProjection = m_HasPreviousViewProjection
@@ -808,6 +810,7 @@ namespace Engine
 		//}
 
 		// ----------- SSR Pass ---------------
+		if (isLitView)
 		{
 			RenderDebugScope debugScope("SSRPass");
 			RenderPassCPUTimer cpuTimer(log.Profile.SSR);
@@ -837,7 +840,7 @@ namespace Engine
 		
 
 		// ------------ 后面是后处理了 开始做TAA ---------------------
-		if(view.TAAEnabled)
+		if (useTAA)
 		{
 			RenderDebugScope debugScope("TAAPass");
 			RenderPassCPUTimer cpuTimer(log.Profile.TAA);
@@ -856,7 +859,7 @@ namespace Engine
 			RenderCommand::SetDepthWrite(false);
 			RenderCommand::SetCull(CullMode::None);
 			m_BloomPass.Execute(view,
-				view.TAAEnabled ? m_TAAPass.GetHistory() :
+				useTAA ? m_TAAPass.GetHistory() :
 				m_SceneColorBuffer->GetColorAttachment(0));
 		}
 
@@ -871,7 +874,7 @@ namespace Engine
 			RenderCommand::SetDepthTest(false);
 			RenderCommand::SetDepthWrite(false);
 			RenderCommand::SetCull(CullMode::None);
-			m_TonemappingPass.Execute(view, view.TAAEnabled ? m_TAAPass.GetHistory() :
+			m_TonemappingPass.Execute(view, useTAA ? m_TAAPass.GetHistory() :
 				m_SceneColorBuffer->GetColorAttachment(0), m_BloomPass.GetBloomTexture());
 
 			target->UnBind();

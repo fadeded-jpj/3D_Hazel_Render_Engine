@@ -9,7 +9,7 @@ namespace Engine
 	enum class RenderDebugView
 	{
 		Lit = 0, BaseColor, WorldNormal,
-		Emissive, Alpha, CSM
+		Emissive, SSRStrength, CSM
 	};
 
 	struct RenderDebugSetting

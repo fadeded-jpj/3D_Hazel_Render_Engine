@@ -93,6 +93,7 @@ in vec4 v_Tangent;
 in vec4 v_CurrentClip;
 in vec4 v_PreviousClip;
 #include "../Anti-aliasing/TAAHelper.glsl";
+#include "../Common/ToonCharacterOutput.glsl"
 
 uniform float u_AlphaCutoff;
 uniform int u_AlphaMode;
@@ -233,11 +234,12 @@ void main()
 			mapped = vec3(0);
 	}
 	else if (u_DebugView == 4)
-		mapped = vec3(alpha);
+		mapped = vec3(0.0);
 
 
 
 	o_Color = vec4(mapped, alpha);
+	WriteCharacterNormalMask(normal);
 	o_Velocity = GetVelocity(v_CurrentClip, v_PreviousClip);
 	//o_Color = vec4(vec3(alpha), 0.2);
 }
